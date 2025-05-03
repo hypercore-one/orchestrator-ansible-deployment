@@ -1,0 +1,41 @@
+---
+- name: Check system requirements
+  block:
+    - name: Check CPU cores
+      ansible.builtin.shell: nproc
+      register: cpu_cores
+      changed_when: false
+
+    - name: Verify minimum CPU cores
+      ansible.builtin.fail:
+        msg: "System does not meet minimum CPU requirements ({{ min_cpu_cores }} cores needed)"
+      when: cpu_cores.stdout | int < min_cpu_cores
+
+    - name: Check available memory
+      ansible.builtin.shell: free -g | awk '/^Mem:/{print $2}'
+      register: available_memory
+      changed_when: false
+
+    - name: Verify minimum RAM
+      ansible.builtin.fail:
+        msg: "System does not meet minimum RAM requirements ({{ min_ram_gb }}GB needed)"
+      when: available_memory.stdout | int < min_ram_gb
+
+    - name: Check available disk space
+      ansible.builtin.shell: df -BG / | awk 'NR==2 {print $4}' | sed 's/G//'
+      register: available_disk
+      changed_when: false
+
+    - name: Verify minimum disk space
+      ansible.builtin.fail:
+        msg: "System does not meet minimum disk space requirements ({{ min_disk_gb }}GB needed)"
+      when: available_disk.stdout | int < min_disk_gb
+
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - unzip
+      - wget
+      - curl
+    state: present
+    update_cache: yes 

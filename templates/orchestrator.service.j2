@@ -1,0 +1,14 @@
+[Unit]
+Description=Zenon Orchestrator Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory={{ orchestrator_config_dir }}
+ExecStart={{ orchestrator_install_path }}/orchestrator
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target 

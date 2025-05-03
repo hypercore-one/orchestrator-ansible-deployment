@@ -1,0 +1,14 @@
+---
+- name: Setup Zenon Orchestrator
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Include common tasks
+      ansible.builtin.import_tasks: tasks/common.yml
+
+    - name: Include orchestrator setup tasks
+      ansible.builtin.import_tasks: tasks/orchestrator.yml
+
+    - name: Include configuration tasks
+      ansible.builtin.import_tasks: tasks/configuration.yml 

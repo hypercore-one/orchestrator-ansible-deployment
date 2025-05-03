@@ -1,0 +1,48 @@
+# Example inventory file for Zenon Orchestrator deployment on a Pillar
+# To use this file:
+# cp inventory.ini.example inventory.ini
+# Then edit inventory.ini with your pillar's details
+
+# Pillar deployment (orchestrator runs on the pillar)
+[orchestrators]
+# Replace with your pillar's IP address
+pillar ansible_host=YOUR_PILLAR_IP # Update IP Address
+
+# Required connection settings
+[orchestrators:vars]
+# Required: Root user and password for pillar access
+ansible_user=root
+ansible_ssh_pass=YOUR_ROOT_PASSWORD
+
+# Optional: SSH key authentication (uncomment if using SSH key instead of password)
+# ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+# Orchestrator Configuration
+orchestrator_config_dir: /root/.orchestrator
+orchestrator_install_path: /usr/local/bin
+orchestrator_version: "v0.0.9a-alphanet" # Update version when appropriate
+orchestrator_binary_url: "https://github.com/HyperCore-Team/orchestrator/releases/download/{{ orchestrator_version }}/orchestrator-linux-amd64.zip"
+
+# Bootstrap Configuration
+bootstrap_address: "/dns/bootstrap.zenon.community/tcp/55055/p2p/12D3KooWBVQYaz3yuJor8oW7bUqoAGDZDpFBGbGerL3SprHn57pQ"
+
+# System Requirements
+min_cpu_cores: 2
+min_ram_gb: 4
+min_disk_gb: 40
+
+# Network Configuration
+# These are the required node URLs for the orchestrator to function on the pillar
+# Replace the example values with your actual node URLs
+eth_node_ws_url: "ws://localhost:8546"  # ETH node address
+bsc_node_ws_url: "ws://localhost:8545"  # BSC node address
+zenon_node_ws_url: "ws://localhost:35998"  # Zenon node address
+
+# Producer Configuration
+# This is required for production use
+# The passphrase is used to encrypt/decrypt the producer key file
+producer_key_passphrase: "your_passphrase_here"  # Replace with your actual passphrase
+
+# Optional: Additional settings
+# ansible_python_interpreter=/usr/bin/python3  # Uncomment if you need to specify Python interpreter
+# ansible_ssh_common_args='-o StrictHostKeyChecking=no'  # Uncomment to disable SSH host key checking 

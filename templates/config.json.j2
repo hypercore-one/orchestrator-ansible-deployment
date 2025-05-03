@@ -1,0 +1,47 @@
+{
+  "DataPath": "{{ orchestrator_config_dir }}",
+  "EventsPath": "",
+  "QueuesPath": "",
+  "GlobalState": 0,
+  "EvmAddress": "",
+  "Networks": {
+    "BSC": {
+      "Urls": [
+        "{{ bsc_node_ws_url }}"
+      ],
+      "FilterQuerySize": 2000
+    },
+    "Ethereum": {
+      "Urls": [
+        "{{ eth_node_ws_url }}"
+      ],
+      "FilterQuerySize": 2000
+    },
+    "Zenon": {
+      "Urls": [
+        "{{ zenon_node_ws_url }}"
+      ],
+      "FilterQuerySize": 0
+    }
+  },
+  "TssConfig": {
+    "Port": 55055,
+    "PublicKey": "",
+    "DecompressedPublicKey": "",
+    "LocalPubKeys": [],
+    "Bootstrap": "{{ bootstrap_address }}",
+    "PubKeyWhitelist": {},
+    "BaseDir": "{{ orchestrator_config_dir }}/tss",
+    "BaseConfig": {
+      "PartyTimeout": 90000000000,
+      "KeyGenTimeout": 600000000000,
+      "KeySignTimeout": 280000000000,
+      "KeyRegroupTimeout": 60,
+      "PreParamTimeout": 600000000000,
+      "EnableMonitor": false
+    }
+  },
+  "ProducerKeyFileName": "producer",
+  "ProducerKeyFilePassphrase": "{{ producer_key_passphrase | default('') }}",
+  "ProducerIndex": 0
+} 

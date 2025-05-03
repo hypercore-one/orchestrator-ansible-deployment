@@ -1,0 +1,50 @@
+---
+- name: Ensure orchestrator directory exists
+  ansible.builtin.file:
+    path: "{{ orchestrator_config_dir }}"
+    state: directory
+    mode: '0755'
+    recurse: yes  # Ensure directory exists while preserving contents
+
+- name: Stop orchestrator service if running
+  ansible.builtin.systemd:
+    name: orchestrator
+    state: stopped
+  ignore_errors: true
+
+- name: Download orchestrator binary
+  ansible.builtin.get_url:
+    url: "{{ orchestrator_binary_url }}"
+    dest: "/tmp/orchestrator.zip"
+    mode: '0644'  # Temporary file, readable by all
+    force: yes  # Always download to ensure we have the latest version
+
+- name: Unzip orchestrator binary
+  ansible.builtin.unarchive:
+    src: "/tmp/orchestrator.zip"
+    dest: "/tmp"
+    remote_src: yes
+
+- name: Install orchestrator binary
+  ansible.builtin.copy:
+    src: "/tmp/orchestrator-linux-amd64"
+    dest: "{{ orchestrator_install_path }}/orchestrator"
+    mode: '0755'  # Executable needs to be runnable by system
+    remote_src: yes
+    backup: yes  # Create backup of existing binary
+
+- name: Copy producer key file
+  ansible.builtin.copy:
+    src: "/root/.znn/wallet/producer"
+    dest: "{{ orchestrator_config_dir }}/producer"
+    mode: '0600'  # Sensitive key file, only readable by root
+    remote_src: yes
+    backup: yes  # Create backup of existing producer key file
+
+- name: Clean up temporary files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "/tmp/orchestrator.zip"
+    - "/tmp/orchestrator-linux-amd64" 
