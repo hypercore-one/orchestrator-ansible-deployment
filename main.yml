@@ -1,5 +1,5 @@
 ---
-- name: Setup Zenon Orchestrator
+- name: Setup Zenon Network Orchestrator
   hosts: all
   become: yes
 

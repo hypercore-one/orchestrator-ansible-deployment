@@ -1,10 +1,20 @@
 ---
 - name: Check system requirements
   block:
+    - name: Check system architecture
+      ansible.builtin.shell: uname -m
+      register: system_arch
+      changed_when: no
+
+    - name: Verify system architecture
+      ansible.builtin.fail:
+        msg: "Unsupported system architecture. This playbook requires x86_64 architecture."
+      when: system_arch.stdout != "x86_64"
+
     - name: Check CPU cores
       ansible.builtin.shell: nproc
       register: cpu_cores
-      changed_when: false
+      changed_when: no
 
     - name: Verify minimum CPU cores
       ansible.builtin.fail:
@@ -14,7 +24,7 @@
     - name: Check available memory
       ansible.builtin.shell: free -g | awk '/^Mem:/{print $2}'
       register: available_memory
-      changed_when: false
+      changed_when: no
 
     - name: Verify minimum RAM
       ansible.builtin.fail:
@@ -24,18 +34,73 @@
     - name: Check available disk space
       ansible.builtin.shell: df -BG / | awk 'NR==2 {print $4}' | sed 's/G//'
       register: available_disk
-      changed_when: false
+      changed_when: no
 
     - name: Verify minimum disk space
       ansible.builtin.fail:
         msg: "System does not meet minimum disk space requirements ({{ min_disk_gb }}GB needed)"
       when: available_disk.stdout | int < min_disk_gb
+  rescue:
+    - name: Report system check failure
+      ansible.builtin.fail:
+        msg: "System requirements check failed. Please ensure all requirements are met."
 
-- name: Install required packages
-  ansible.builtin.apt:
-    name:
+- name: Test network connectivity
+  block:
+    - name: Test ETH node connectivity
+      ansible.builtin.uri:
+        url: "{{ eth_node_ws_url | replace('ws://', 'http://') }}"
+        method: GET
+        status_code: [200, 401, 403]  # Accept any response that indicates the server is reachable
+      register: eth_connectivity
+      ignore_errors: true
+
+    - name: Test BSC node connectivity
+      ansible.builtin.uri:
+        url: "{{ bsc_node_ws_url | replace('ws://', 'http://') }}"
+        method: GET
+        status_code: [200, 401, 403]
+      register: bsc_connectivity
+      ignore_errors: true
+
+    - name: Test Zenon node connectivity
+      ansible.builtin.uri:
+        url: "{{ zenon_node_ws_url | replace('ws://', 'http://') }}"
+        method: GET
+        status_code: [200, 401, 403]
+      register: zenon_connectivity
+      ignore_errors: true
+
+    - name: Report connectivity status
+      ansible.builtin.debug:
+        msg: >
+          Node connectivity status:
+          ETH: {{ 'OK' if eth_connectivity.status in [200, 401, 403] else 'Failed' }}
+          BSC: {{ 'OK' if bsc_connectivity.status in [200, 401, 403] else 'Failed' }}
+          Zenon: {{ 'OK' if zenon_connectivity.status in [200, 401, 403] else 'Failed' }}
+  rescue:
+    - name: Report connectivity check failure
+      ansible.builtin.debug:
+        msg: "Network connectivity check failed. Please ensure all nodes are reachable."
+
+- name: Set package manager variables
+  ansible.builtin.set_fact:
+    pkg_mgr: "{{ ansible_os_family | lower }}"
+    pkg_list:
       - unzip
       - wget
       - curl
+
+- name: Install required packages (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name: "{{ pkg_list }}"
     state: present
-    update_cache: yes 
+    update_cache: yes
+  when: pkg_mgr == "debian"
+
+- name: Install required packages (RHEL/CentOS/Fedora)
+  ansible.builtin.dnf:
+    name: "{{ pkg_list }}"
+    state: present
+    update_cache: yes
+  when: pkg_mgr == "redhat" 

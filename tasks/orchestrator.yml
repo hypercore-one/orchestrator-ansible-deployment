@@ -6,6 +6,16 @@
     mode: '0755'
     recurse: yes  # Ensure directory exists while preserving contents
 
+- name: Check for producer key file
+  ansible.builtin.stat:
+    path: "/root/.znn/wallet/producer"
+  register: producer_key
+
+- name: Fail if producer key file is missing
+  ansible.builtin.fail:
+    msg: "Producer key file not found at /root/.znn/wallet/producer. Please ensure your Zenon producer is properly set up."
+  when: not producer_key.stat.exists
+
 - name: Stop orchestrator service if running
   ansible.builtin.systemd:
     name: orchestrator
