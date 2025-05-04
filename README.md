@@ -12,27 +12,10 @@ This Ansible playbook automates the deployment of the Zenon Orchestrator on a pi
 4. **No Agent Required**: No software needs to be installed on the pillar node besides SSH
 5. **Configuration as Code**: All deployment steps are defined in YAML files
 
-## Versioning
-
-This project follows [Semantic Versioning](https://semver.org/):
-- Major version (0.x.x): Initial development, unstable API
-- Minor version (x.1.x): Backwards-compatible functionality additions
-- Patch version (x.x.1): Backwards-compatible bug fixes
-
-Current version: 0.0.1 (Development)
-- Initial development release
-- Basic orchestrator deployment functionality
-- System requirement checks
-- Network connectivity validation
-- Health monitoring
-- Secure configuration handling
-- UFW port configuration (if enabled)
-
-Note: Version 1.0.0 will be released when the playbook is considered stable and production-ready.
 
 ## Prerequisites
 
-- Ansible installed on your local machine
+- Ansible installed on your **LOCAL MACHINE** - not the pillar
 - SSH access to your pillar node
 - Root access to your pillar node
 - Existing Zenon wallet with producer key file at `/root/.znn/wallet/producer`
@@ -49,6 +32,8 @@ Note: Version 1.0.0 will be released when the playbook is considered stable and 
 - 120 QSR fused to the producer address.  The installation will abort if sufficent QSR is not fused.
 
 ## Installing Ansible
+
+Intall Ansible on your **LOCAL MACHINE** not the Pillar.
 
 ### macOS
 ```bash
