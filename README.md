@@ -75,7 +75,7 @@ ansible --version
 
 ### Step 1: Clone the Repository
 
-1. Clone the repository:
+1. Clone the repository (from your LOCAL machinie NOT the pillar):
    ```bash
    git clone https://github.com/hypercore-one/orchestrator-ansible-deployment.git
    cd orchestrator-ansible-deployment
