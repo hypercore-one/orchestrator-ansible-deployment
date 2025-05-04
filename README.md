@@ -71,58 +71,89 @@ ansible --version
 2. After WSL is installed, open Ubuntu from the Start menu
 3. Follow the Linux (Ubuntu/Debian) instructions above
 
-## Quick Start
+## Step by Step Configuration
 
-1. Clone this repository:
+### Step 1: Clone the Repository
+
+1. Clone the repository:
    ```bash
    git clone https://github.com/hypercore-one/orchestrator-ansible-deployment.git
    cd orchestrator-ansible-deployment
    ```
 
-2. Create and configure your inventory and variables files:
+### Step 2: Configure inventory.ini
+
+1. Copy the example inventory file:
    ```bash
-   # Create inventory file
    cp inventory.ini.example inventory.ini
-   
-   # Create variables file
+   ```
+
+2. Edit the inventory file:
+   ```bash
+   nano inventory.ini
+   ```
+
+3. Update the following in the file:
+   ```ini
+   # Pillar deployment (orchestrator runs on the pillar)
+   [orchestrators]
+   pillar ansible_host=IP_ADDRESS  # Replace IP_ADDRESS with your pillar's IP
+   ```
+   - Only change the `IP_ADDRESS` value
+   - Other settings are pre-configured for password authentication
+   - The file already includes:
+     - Root user access
+     - Sudo privilege escalation
+     - SSH settings for password authentication
+
+### Step 3: Configure vars/main.yml
+
+1. Copy the example variables file:
+   ```bash
    cp vars/main.yml.example vars/main.yml
    ```
-   
-   Edit `inventory.ini` and `vars/main.yml` with your specific configuration:
-   - Your pillar's IP address
-   - Root password
-   - Node URLs (ETH, BSC, Zenon) - must start with ws:// or wss://
-   - Producer key passphrase
-   - System requirements (if different from defaults)
-   - Bootstrap configuration (if different from defaults)
 
-   Note: Both `inventory.ini` and `vars/main.yml` contain sensitive information and are excluded from git by default.
-
-3. Run the playbook:
+2. Edit the variables file:
    ```bash
-   ansible-playbook -i inventory.ini main.ymlc --ask-pass
+   nano vars/main.yml
    ```
 
-## Configuration
+3. Update the following sections:
 
-Configuration is done through two main files:
+   a. **Network Configuration**:
+   ```yaml
+   eth_node_ws_url: "wss://your-eth-node-url"        # Replace with your ETH node URL
+   bnb_chain_node_ws_url: "wss://your-bnb-node-url"  # Replace with your BSC node URL
+   supernova_node_ws_url: "wss://your-supernova-node-url"  # Replace with your Supernova node URL
+   zenon_node_ws_url: "ws://127.0.0.1:35998"         # Keep as is if running locally
+   zenon_node_http_url: "http://127.0.0.1:35997"     # Keep as is if running locally
+   ```
 
-1. `inventory.ini`: Contains pillar connection details and basic configuration
-2. `vars/main.yml`: Contains detailed configuration including:
-   - Orchestrator installation paths and version
-   - Network node URLs (ws:// or wss://, with optional port)
-   - Producer configuration
-   - System requirements
-   - Bootstrap configuration
+   b. **Producer Configuration**:
+   ```yaml
+   producer_key_passphrase: "your-passphrase-here"    # Replace with your passphrase
+   producer_address: "your-producer-address-here"     # Replace with your address (must have 120 QSR)
+   ```
 
-Example files (`inventory.ini.example` and `vars/main.yml.example`) are provided as templates. Copy these to create your actual configuration files:
+   c. **Optional Settings** (only change if different from defaults):
+   ```yaml
+   min_cpu_cores: 2      # Minimum CPU cores required
+   min_ram_gb: 4         # Minimum RAM required in GB
+   min_disk_gb: 40       # Minimum disk space required in GB
+   orchestrator_version: "v0.0.9a-alphanet"  # Only change if using a different version
+   ```
 
-```bash
-cp inventory.ini.example inventory.ini
-cp vars/main.yml.example vars/main.yml
-```
+Note: Both `inventory.ini` and `vars/main.yml` contain sensitive information and are excluded from git by default.
 
-Then edit the new files with your specific configuration. These files contain sensitive information and are excluded from git by default.
+### Step 4: Deploy the Orchestrator
+
+1. Run the playbook:
+   ```bash
+   ansible-playbook -i inventory.ini main.yml --ask-pass
+   ```
+   - You will be prompted for the root password of your pillar node
+   - The playbook will perform all necessary checks and configurations
+   - Progress will be displayed in real-time
 
 ## File Structure and Permissions
 
