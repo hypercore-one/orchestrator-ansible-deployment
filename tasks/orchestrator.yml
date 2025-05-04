@@ -26,8 +26,8 @@
   ansible.builtin.get_url:
     url: "{{ orchestrator_binary_url }}"
     dest: "/tmp/orchestrator.zip"
-    mode: '0644'  # Temporary file, readable by all
-    force: yes  # Always download to ensure we have the latest version
+    mode: "0644"
+    force: true
 
 - name: Unzip orchestrator binary
   ansible.builtin.unarchive:

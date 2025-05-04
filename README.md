@@ -2,7 +2,15 @@
 
 Version: 0.0.1 (Development)
 
-This Ansible playbook automates the deployment of the Zenon Orchestrator on a pillar node.
+This Ansible playbook automates the deployment of the Zenon Orchestrator on a pillar node. Ansible is an automation tool that runs on your local computer and connects to remote servers (in this case, your pillar node) to perform configuration and deployment tasks. It uses SSH to securely connect to the remote server and execute commands, making it a safe and efficient way to manage your orchestrator deployment.
+
+## How Ansible Works
+
+1. **Local Execution**: Ansible runs on your local computer, not on the pillar node
+2. **SSH Connection**: It connects to your pillar node via SSH to perform tasks
+3. **Idempotent Operations**: Tasks are designed to be safe to run multiple times
+4. **No Agent Required**: No software needs to be installed on the pillar node besides SSH
+5. **Configuration as Code**: All deployment steps are defined in YAML files
 
 ## Versioning
 
@@ -37,6 +45,8 @@ Note: Version 1.0.0 will be released when the playbook is considered stable and 
   - Port 55055 (P2P) must be accessible
   - Port 55000 (API) must be accessible
   - If UFW is enabled, these ports will be automatically configured
+- Public Nodes for ETH, BSC and Supernova
+- 120 QSR fused to the producer address.  The installation will abort if sufficent QSR is not fused.
 
 ## Installing Ansible
 
@@ -84,11 +94,16 @@ ansible --version
    cd orchestrator-ansible-deployment
    ```
 
-2. Create and configure your inventory file:
+2. Create and configure your inventory and variables files:
    ```bash
+   # Create inventory file
    cp inventory.ini.example inventory.ini
+   
+   # Create variables file
+   cp vars/main.yml.example vars/main.yml
    ```
-   Edit `inventory.ini` and update:
+   
+   Edit `inventory.ini` and `vars/main.yml` with your specific configuration:
    - Your pillar's IP address
    - Root password
    - Node URLs (ETH, BSC, Zenon) - must start with ws:// or wss://
@@ -96,21 +111,33 @@ ansible --version
    - System requirements (if different from defaults)
    - Bootstrap configuration (if different from defaults)
 
+   Note: Both `inventory.ini` and `vars/main.yml` contain sensitive information and are excluded from git by default.
+
 3. Run the playbook:
    ```bash
-   ansible-playbook -i inventory.ini main.yml
+   ansible-playbook -i inventory.ini main.ymlc --ask-pass
    ```
 
 ## Configuration
 
-All configuration is done through the `inventory.ini` file. The file includes:
+Configuration is done through two main files:
 
-- Pillar connection details (IP, credentials)
-- Orchestrator installation paths and version
-- Network node URLs (ws:// or wss://, with optional port)
-- Producer configuration
-- System requirements
-- Bootstrap configuration
+1. `inventory.ini`: Contains pillar connection details and basic configuration
+2. `vars/main.yml`: Contains detailed configuration including:
+   - Orchestrator installation paths and version
+   - Network node URLs (ws:// or wss://, with optional port)
+   - Producer configuration
+   - System requirements
+   - Bootstrap configuration
+
+Example files (`inventory.ini.example` and `vars/main.yml.example`) are provided as templates. Copy these to create your actual configuration files:
+
+```bash
+cp inventory.ini.example inventory.ini
+cp vars/main.yml.example vars/main.yml
+```
+
+Then edit the new files with your specific configuration. These files contain sensitive information and are excluded from git by default.
 
 ## File Structure and Permissions
 
@@ -145,8 +172,6 @@ The playbook performs several health checks during deployment:
    - Free disk space
 
 2. Network Connectivity:
-   - Tests connectivity to ETH node
-   - Tests connectivity to BSC node
    - Tests connectivity to Zenon node
    - Verifies UFW configuration (if enabled)
 
@@ -154,16 +179,16 @@ The playbook performs several health checks during deployment:
    - Service status verification
    - P2P port availability (port 55055)
    - API port availability (port 55000)
-   - Health endpoint check
    - Log analysis for errors
 
 ## Security Notes
 
-- The `inventory.ini` file contains sensitive information. Keep it secure and never commit it to version control.
-- Consider using Ansible Vault to encrypt sensitive variables in your inventory file.
-- The producer key file is copied with restricted permissions (0600) to ensure only root can access it.
-- Existing files are preserved during updates, with backups created before any modifications.
-- UFW rules are only added if the firewall is already active, maintaining your security preferences.
+- The `inventory.ini` and `vars/main.yml` files contain sensitive information. Keep them secure and never commit them to version control.
+- These files are automatically excluded from git via `.gitignore`
+- Consider using Ansible Vault to encrypt sensitive variables in your configuration files
+- The producer key file is copied with restricted permissions (0600) to ensure only root can access it
+- Existing files are preserved during updates, with backups created before any modifications
+- UFW rules are only added if the firewall is already active, maintaining your security preferences
 
 ## Updating
 
@@ -177,7 +202,7 @@ The playbook is designed to handle updates safely:
 
 ## Changelog
 
-### 0.0.1 (2024-03-21)
+### 0.0.1 (2025-05-04)
 - Initial development release
 - Basic orchestrator deployment functionality
 - System requirement checks

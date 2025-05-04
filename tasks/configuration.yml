@@ -1,21 +1,4 @@
 ---
-- name: Validate node URLs
-  block:
-    - name: Validate ETH node URL
-      ansible.builtin.fail:
-        msg: "Invalid ETH node URL format. Expected format: ws:// or wss://hostname[:port]"
-      when: not eth_node_ws_url | regex_search('^(ws|wss)://[^:]+(:[0-9]+)?$')
-
-    - name: Validate BSC node URL
-      ansible.builtin.fail:
-        msg: "Invalid BSC node URL format. Expected format: ws:// or wss://hostname[:port]"
-      when: not bsc_node_ws_url | regex_search('^(ws|wss)://[^:]+(:[0-9]+)?$')
-
-    - name: Validate Zenon node URL
-      ansible.builtin.fail:
-        msg: "Invalid Zenon node URL format. Expected format: ws:// or wss://hostname[:port]"
-      when: not zenon_node_ws_url | regex_search('^(ws|wss)://[^:]+(:[0-9]+)?$')
-
 - name: Check UFW status and configure ports
   block:
     - name: Check if UFW is installed
@@ -25,12 +8,24 @@
       ignore_errors: true
 
     - name: Get UFW status
-      ansible.builtin.shell: >
-        ufw status | grep -q "Status: active"
+      ansible.builtin.shell: ufw status
       register: ufw_status
       changed_when: false
       ignore_errors: true
       when: ufw_check.rc == 0
+
+    - name: Set UFW active status
+      ansible.builtin.set_fact:
+        ufw_active: "{{ ufw_check.rc == 0 and ufw_status.stdout is defined and 'Status: active' in ufw_status.stdout }}"
+
+    - name: Display UFW status
+      ansible.builtin.debug:
+        msg: >
+          UFW Status:
+          Installed: {{ 'Yes' if ufw_check.rc == 0 else 'No' }}
+          {% if ufw_check.rc == 0 %}
+          Active: {{ 'Yes' if ufw_active else 'No' }}
+          {% endif %}
 
     - name: Configure UFW for orchestrator ports
       ansible.builtin.ufw:
@@ -40,14 +35,14 @@
       loop:
         - 55055  # P2P port
         - 55000  # API port
-      when: ufw_check.rc == 0 and ufw_status.rc == 0
+      when: ufw_active
 
     - name: Report UFW configuration
       ansible.builtin.debug:
         msg: >
           UFW Configuration:
-          Status: {{ 'Enabled' if ufw_check.rc == 0 and ufw_status.rc == 0 else 'Disabled or not installed' }}
-          Ports configured: {{ '55055, 55000' if ufw_check.rc == 0 and ufw_status.rc == 0 else 'N/A' }}
+          Status: {{ 'Enabled' if ufw_active else 'Disabled or not installed' }}
+          Ports configured: {{ '55055, 55000' if ufw_active else 'N/A' }}
           Note: UFW will not be enabled if it is not already active
 
 - name: Create config.json template
@@ -80,34 +75,32 @@
     msg: "Orchestrator service {{ 'started successfully' if service_start.changed else 'was already running' }}"
 
 - name: Wait for orchestrator to be ready
-  ansible.builtin.wait_for:
-    host: "{{ ansible_host }}"
-    port: 55055  # TSS port from config
-    state: started
-    delay: 5
-    timeout: 60
-  register: tss_ready
+  block:
+    - name: Check orchestrator service status
+      ansible.builtin.systemd:
+        name: orchestrator
+        state: started
+      register: service_status
 
-- name: Check orchestrator logs for errors
-  ansible.builtin.shell: journalctl -u orchestrator -n 50 --no-pager
-  register: orchestrator_logs
-  changed_when: "false"
+    - name: Get orchestrator logs
+      ansible.builtin.shell: journalctl -u orchestrator -n 50 --no-pager
+      register: orchestrator_logs
+      changed_when: false
 
-- name: Display orchestrator logs
-  ansible.builtin.debug:
-    msg: "{{ orchestrator_logs.stdout_lines }}"
-  when: orchestrator_logs.stdout_lines | length > 0
+    - name: Display orchestrator status
+      ansible.builtin.debug:
+        msg: >
+          Orchestrator Status:
+          Service: {{ 'Running' if service_status.status.ActiveState == 'active' else 'Not running' }}
+          Last Logs:
+          {% for line in orchestrator_logs.stdout_lines %}
+          {{ line }}
+          {% endfor %}
 
-- name: Verify orchestrator health
-  ansible.builtin.shell: curl -s http://localhost:55055/health
-  register: health_check
-  changed_when: "false"
-  ignore_errors: true
-
-- name: Report health check status
-  ansible.builtin.debug:
-    msg: >
-      Orchestrator health check:
-      Service: {{ 'Running' if service_start.changed else 'Already running' }}
-      TSS Port: {{ 'Open' if tss_ready.elapsed < 60 else 'Not responding' }}
-      Health Endpoint: {{ 'OK' if health_check.rc == 0 else 'Not responding' }} 
+  rescue:
+    - name: Report startup failure
+      ansible.builtin.fail:
+        msg: >
+          Orchestrator service failed to start properly.
+          Please check the service status with: systemctl status orchestrator
+          And view the logs with: journalctl -u orchestrator -n 100 --no-pager

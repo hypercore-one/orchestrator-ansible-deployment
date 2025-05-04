@@ -1,8 +1,12 @@
-# Ansible vault files
+# Ansible variable files
 group_vars/*.yml
 host_vars/*.yml
+vars/main.yml
 !group_vars/*.yml.example
 !host_vars/*.yml.example
+!vars/*.yml.example
+
+
 
 # Inventory files
 inventory.ini
@@ -22,4 +26,17 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
-*.swo 
+*.swo
+
+# Sensitive configuration files
+*.vault
+*.vault.yml
+
+# Ansible
+*.retry
+*.pyc
+__pycache__/
+
+# System files
+.DS_Store
+Thumbs.db 

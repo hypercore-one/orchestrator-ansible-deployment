@@ -1,7 +1,9 @@
 ---
 - name: Setup Zenon Network Orchestrator
-  hosts: all
+  hosts: orchestrators
   become: yes
+  vars_files:
+    - vars/main.yml
 
   tasks:
     - name: Include common tasks

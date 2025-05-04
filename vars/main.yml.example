@@ -1,0 +1,25 @@
+---
+# Orchestrator Configuration
+orchestrator_config_dir: "/root/.orchestrator"
+orchestrator_install_path: "/usr/local/bin"
+orchestrator_version: "v0.0.9a-alphanet"
+orchestrator_binary_url: "https://github.com/HyperCore-Team/orchestrator/releases/download/{{ orchestrator_version }}/orchestrator-linux-amd64.zip"
+
+# Bootstrap Configuration
+bootstrap_address: "/dns/bootstrap.zenon.community/tcp/55055/p2p/12D3KooWBVQYaz3yuJor8oW7bUqoAGDZDpFBGbGerL3SprHn57pQ"
+
+# System Requirements
+min_cpu_cores: 2
+min_ram_gb: 4
+min_disk_gb: 40
+
+# Network Configuration
+eth_node_ws_url: "wss://your-eth-node-url"
+bnb_chain_node_ws_url: "wss://your-bnb-node-url"
+supernova_node_ws_url: "wss://rpc.novascan.io"
+zenon_node_ws_url: "ws://127.0.0.1:35998"
+zenon_node_http_url: "http://127.0.0.1:35997"
+
+# Pillar Producer Configuration
+producer_key_passphrase: "your-passphrase-here"
+producer_address: "your-producer-address-here" 
